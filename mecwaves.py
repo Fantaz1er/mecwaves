@@ -1,8 +1,8 @@
 import os
-import matplotlib.pyplot as plt
 
-from numpy import cos, pi, arange
+import matplotlib.pyplot as plt
 from matplotlib import rcParams
+from numpy import cos, pi, arange
 
 const = int | float
 value = int | float
@@ -92,15 +92,6 @@ class PlaneWave(SpreadElasticMedia):
 
 
 class DrawPlaneWavePlot(SpreadElasticMedia):
-    @staticmethod
-    def save_plot(name_file:  str = '', fmt: str = 'png'):
-        path_plots = f'./plots/{fmt}'
-        if not os.path.exists(path_plots):
-            os.mkdir(path_plots)
-        os.chdir(path_plots)
-        plt.savefig(f'{name_file}.{fmt}')
-        print('[+] Elastic wave plot is created')
-
     def __init__(self, x: meters, t: seconds, **kwargs):
         try:
             super(DrawPlaneWavePlot, self).__init__(AMPLITUDE=kwargs['AMPLITUDE'],
@@ -114,21 +105,41 @@ class DrawPlaneWavePlot(SpreadElasticMedia):
         rcParams['font.family'] = 'Arial', 'Arial', 'Tahoma'
         rcParams['font.fantasy'] = 'Arial'
 
-        plt.figure(figsize=(5, 2.7))
-
-        fig, ax = plt.subplots()
+        fig, axs = plt.subplots(figsize=(5, 4))
 
         ox = arange(0.0, t, 0.01)
         oy = self.A * cos(self.w * ox - self.phase(self.wavelength, x))
 
-        ax.plot(ox, oy, lw=2)
-        ax.grid()
+        _, = axs.plot(ox, oy, lw=2)
+        axs.grid()
+
+        axs.set_ylim(-self.A - 1, self.A + 1)
 
         plt.title(f'Elastic Wave Plot\nS(x,t)={self.A}×cos({self.w / pi}π×{t} - 2π/{self.wavelength}×{x})')
-        ax.set_xlabel('Time [s]', fontweight='bold')
-        ax.set_ylabel('Amplitude', fontweight='bold')
+        axs.set_xlabel('Time [s]', fontweight='bold')
+        axs.set_ylabel('Amplitude', fontweight='bold')
 
-        self.save_plot('elastic_wave_plot')
+    @staticmethod
+    def show_plot():
+        plt.show()
+
+    @staticmethod
+    def save_plot(name_file: str = 'elastic-wave-plot', fmt: str = 'png'):
+        path_plots: str = f'./plots/{fmt}'
+        if not os.path.exists(path_plots):
+            os.mkdir(path_plots)
+        os.chdir(path_plots)
+        while os.path.exists(f'{name_file}.{fmt}'):
+            if name_file.endswith('_', 0, -1):
+                name_splits = name_file.split('_')
+                index = int(name_splits[-1]) + 1
+                if index >= 10:
+                    name_file = f'{name_file}_0'
+                else:
+                    name_file = f'_'.join(e for e in name_splits[0:-1]) + f'_{index}'
+            else:
+                name_file = f"{name_file}_0"
+        plt.savefig(f'{name_file}.{fmt}')
 
 
 if __name__ == "__main__":
@@ -136,4 +147,5 @@ if __name__ == "__main__":
     # print(waves.wavelength(12.2, periodicity=2))
     # print(waves.periodicity(6.1, 12.2))
     # print(PlaneWave(x=9, t=2, wavelength=10, AMPLITUDE=2, periodicity=3))
-    DrawPlaneWavePlot(x=9, t=2, wavelength=10, AMPLITUDE=2, omega=6*pi)
+    # DrawPlaneWavePlot(x=9, t=4, wavelength=12, AMPLITUDE=1, omega=8*pi).save_plot()
+    DrawPlaneWavePlot(x=9, t=2, wavelength=10, AMPLITUDE=0.2, omega=2 * pi).show_plot()
